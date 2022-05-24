@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+a.bsb-btn {
+  background-color: transparent;
+  border: 1px solid #525252;
+  border-radius: 3px;
+  color: #525252;
+  cursor: default;
+  display: inline-block;
+  font-size: 16px;
+  line-height: 20px;
+  max-width: 100%;
+  padding: 9px 16px;
+  text-decoration: none;
+  transition: background-color 0.5s ease 0s;
+  vertical-align: middle;
+  font-family: "Lato",sans-serif;
+  white-space: nowrap;
+}
+a.bsb-btn:hover {
+  background-color: #525252;
+  color: #ffffff;
+}
+td.division-label {
+ text-align: right;
+}
+
+</style>
+</head>
+<script>
+const APRIL = 3;
+const JULY = 6;
+const AUGUST = 7;
+
+const DIVISIONS = [6, 8, 10, 12, 14, 16, 18];
+
+const SPRING = 'spring';
+const FALL = 'fall';
+const TOO_OLD = 'Too old'
+const TOO_YOUNG = 'Too young';
+
+function getDivision(birthday, seasonYear, seasonSeason) {
+  var division;
+  for (const possibleDivision of DIVISIONS) {
+    var earliestBirthday = new Date(seasonYear - possibleDivision, JULY, 31);
+    if (birthday > earliestBirthday) {
+      division = possibleDivision;
+      break;
+    }
+  }
+  if (division == null) {
+    return TOO_OLD;
+  }
+  if (division == 6) {
+    var latestBirthday = seasonSeason == FALL ? new Date(seasonYear - 4, JULY, 31) : new Date(seasonYear - 4, APRIL, 1);
+    if (birthday > latestBirthday) {
+      return TOO_YOUNG;
+    }
+  }
+  return 'U' + division;
+}
+
+function checkDate(expected, birthday, year, season) {
+  var division = getDivision(birthday, year, season);
+  var message;
+  var func;
+  if (division == expected) {
+    message = 'PASS';
+    func = console.log;
+  } else {
+    message = 'FAIL';
+    func = console.error;
+  }
+  func(message + ': expected[' + expected + '] got[' + division + '] birthday[' + birthday.toISOString().slice(0, 10) + '] year[' + year + '] season=[' + season + ']');
+}
+checkDate(TOO_YOUNG, new Date(2019, JULY, 1), 2022, SPRING);
+checkDate(TOO_YOUNG, new Date(2019, JULY, 1), 2022, FALL);
+
+checkDate(TOO_YOUNG, new Date(2018, APRIL, 2), 2022, SPRING);
+checkDate('U6', new Date(2018, APRIL, 1), 2022, SPRING);
+
+checkDate(TOO_YOUNG, new Date(2018, AUGUST, 1), 2022, FALL);
+checkDate('U6', new Date(2018, JULY, 31), 2022, FALL);
+checkDate('U6', new Date(2016, AUGUST, 1), 2022, FALL);
+
+checkDate('U8', new Date(2016, JULY, 31), 2022, FALL);
+checkDate('U8', new Date(2016, JULY, 30), 2022, FALL);
+checkDate('U18', new Date(2004, AUGUST, 1), 2022, FALL);
+checkDate(TOO_OLD, new Date(2004, JULY, 31), 2022, FALL);
+checkDate(TOO_OLD, new Date(2004, JULY, 30), 2022, FALL);
+
+function updateDivision(season, updateCurrentYear) {
+  var prefix = `${season == SPRING ? 'spring' : 'fall'}_${updateCurrentYear ? 'curr_year' : 'next_year'}`;
+  var label = document.getElementById(`${prefix}_label`)
+  var division = document.getElementById(`${prefix}_division`)
+  if (label && division) {
+    label.innerHTML = '';
+    division.innerHTML = '';
+    var currentYear = new Date().getFullYear();
+    var year = updateCurrentYear ? currentYear : currentYear + 1;
+    label.appendChild(
+       document.createTextNode(`${season == SPRING ? 'Spring' : 'Fall'} ${year}`))
+
+    var divisionText;
+    var birthday = document.getElementById("birthday");
+    if (birthday.value) {
+      divisionText = getDivision(new Date(birthday.value), year, season);
+    } else {
+      divisionText = '--'
+    }
+    division.appendChild(document.createTextNode(divisionText))
+  }
+}
+
+function updateDivisions() {
+  updateDivision(SPRING, true);
+  updateDivision(SPRING, false);
+  updateDivision(FALL, true);
+  updateDivision(FALL, false);
+}
+
+</script>
+<body onload='updateDivisions()'>
+
+<label for="birthday">Birthday:</label>
+<input type="date" id="birthday" name="birthday">
+
+<br>
+<br>
+
+<a class="bsb-btn" onclick="updateDivisions()">Check Division</a>
+
+<br>
+<br>
+
+<div id="seasons" />
+<table>
+ <tr>
+  <td id='spring_curr_year_label' class='division-label'/>
+  <td id='spring_curr_year_division' />
+ </tr>
+ <tr>
+  <td id='fall_curr_year_label' class='division-label'/>
+  <td id='fall_curr_year_division' />
+ </tr>
+ <tr>
+  <td id='spring_next_year_label' class='division-label'/>
+  <td id='spring_next_year_division' />
+ </tr>
+ <tr>
+  <td id='fall_next_year_label' class='division-label'/>
+  <td id='fall_next_year_division' />
+ </tr>
+</table>
+
+</body>
+</html>
